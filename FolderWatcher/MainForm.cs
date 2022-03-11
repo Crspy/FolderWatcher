@@ -121,7 +121,8 @@ namespace FolderWatcher
         void AddMsg(string Timestamp, string Type, string Path, string OldPath = "")
         {
             this.Invoke(new MethodInvoker(delegate () {
-                notifyIconBlinkTimer.Start();
+                if (notifyIcon.Visible)
+                    notifyIconBlinkTimer.Start();
                 string[] row = { Timestamp, Type, Path, OldPath };
                 logStream.WriteLine(string.Join("||", row));
                 logStream.Flush();
