@@ -173,6 +173,9 @@ namespace FolderWatcher
 
         public void fileSystemWatcher_Changed(object sender, System.IO.FileSystemEventArgs e)
         {
+            string fileName = Path.GetFileName(e.FullPath);
+            // ignore folders and temporary office files
+            if (string.IsNullOrEmpty(fileName) || fileName.StartsWith("~$")) return; 
             fileSystemWatcher.Changed -= fileSystemWatcher_Changed;
             AddMsg(DateTime.Now.ToString(), "Changed", e.FullPath);
             this.Alert("Changed: \"" + e.FullPath + "\"", Form_Alert.enmType.Success);
@@ -181,12 +184,16 @@ namespace FolderWatcher
 
         public void fileSystemWatcher_Created(object sender, System.IO.FileSystemEventArgs e)
         {
+            string fileName = Path.GetFileName(e.FullPath);
+            if (fileName.StartsWith("~$")) return;
             AddMsg(DateTime.Now.ToString(), "Created", e.FullPath);
             this.Alert("Created: \"" + e.FullPath + "\"", Form_Alert.enmType.Info);
         }
 
         public void fileSystemWatcher_Deleted(object sender, System.IO.FileSystemEventArgs e)
         {
+            string fileName = Path.GetFileName(e.FullPath);
+            if (fileName.StartsWith("~$")) return;
             AddMsg(DateTime.Now.ToString(), "Deleted", e.FullPath);
             this.Alert("Deleted: \"" + e.FullPath + "\"", Form_Alert.enmType.Warning);
         }
@@ -258,6 +265,12 @@ namespace FolderWatcher
             {
                 Hide();
                 notifyIcon.Visible = true;
+            }
+            else
+            {
+                notifyIcon.Visible = false;
+                notifyIconBlinkTimer.Stop();
+                notifyIcon.Icon = this.Icon;
             }
         }
 
