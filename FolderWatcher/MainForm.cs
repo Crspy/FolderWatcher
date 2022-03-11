@@ -175,7 +175,7 @@ namespace FolderWatcher
         {
             string fileName = Path.GetFileName(e.FullPath);
             // ignore folders and temporary office files
-            if (string.IsNullOrEmpty(fileName) || fileName.StartsWith("~$")) return; 
+            if (Directory.Exists(e.FullPath) || fileName.StartsWith("~$")) return; 
             fileSystemWatcher.Changed -= fileSystemWatcher_Changed;
             AddMsg(DateTime.Now.ToString(), "Changed", e.FullPath);
             this.Alert("Changed: \"" + e.FullPath + "\"", Form_Alert.enmType.Success);
