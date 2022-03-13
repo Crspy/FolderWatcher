@@ -47,7 +47,9 @@ namespace FolderWatcher
 
             listView.Columns.Add("Timestamp", -2);
             listView.Columns.Add("Type", -2);
+            listView.Columns.Add("Name", -2);
             listView.Columns.Add("Path", -2);
+            listView.Columns.Add("OldName", -2);
             listView.Columns.Add("OldPath", -2);
             lvwColumnSorter.Order = SortOrder.Descending;
             listView.SetSortIcon(0, SortOrder.Descending);
@@ -118,12 +120,12 @@ namespace FolderWatcher
             notifyIconBlinkTimer.Start();
         }
 
-        void AddMsg(string Timestamp, string Type, string Path, string OldPath = "")
+        void AddMsg(string Timestamp, string Type,string Name, string Path,string OldName="", string OldPath = "")
         {
             this.Invoke(new MethodInvoker(delegate () {
                 if (notifyIcon.Visible)
                     notifyIconBlinkTimer.Start();
-                string[] row = { Timestamp, Type, Path, OldPath };
+                string[] row = { Timestamp, Type,Name, Path, OldName, OldPath };
                 logStream.WriteLine(string.Join("||", row));
                 logStream.Flush();
                 ListViewItem listViewItem = new ListViewItem(row);
@@ -167,7 +169,7 @@ namespace FolderWatcher
         private void listView_MouseDoubleClick(object sender, MouseEventArgs e)
         {
             var row = listView.SelectedItems[0].SubItems;
-            var path = row[2].Text;
+            var path = row[3].Text;
             Process.Start("explorer.exe", "/select," + path);
         }
 
@@ -175,33 +177,35 @@ namespace FolderWatcher
         {
             string fileName = Path.GetFileName(e.FullPath);
             // ignore folders and temporary office files
-            if (Directory.Exists(e.FullPath) || fileName.StartsWith("~$")) return; 
+            if (Directory.Exists(e.FullPath) || fileName.StartsWith("~$") || fileName.Equals("thumbs.db", StringComparison.InvariantCultureIgnoreCase)) return; 
             fileSystemWatcher.Changed -= fileSystemWatcher_Changed;
-            AddMsg(DateTime.Now.ToString(), "Changed", e.FullPath);
-            this.Alert("Changed: \"" + e.FullPath + "\"", Form_Alert.enmType.Success);
+            AddMsg(DateTime.Now.ToString(), "Changed",fileName, e.FullPath);
+            this.Alert("Changed: \"" + fileName + "\"", Form_Alert.enmType.Success);
             fileSystemWatcher.Changed += fileSystemWatcher_Changed;
         }
 
         public void fileSystemWatcher_Created(object sender, System.IO.FileSystemEventArgs e)
         {
             string fileName = Path.GetFileName(e.FullPath);
-            if (fileName.StartsWith("~$")) return;
-            AddMsg(DateTime.Now.ToString(), "Created", e.FullPath);
-            this.Alert("Created: \"" + e.FullPath + "\"", Form_Alert.enmType.Info);
+            if (fileName.StartsWith("~$") || fileName.Equals("thumbs.db",StringComparison.InvariantCultureIgnoreCase)) return;
+            AddMsg(DateTime.Now.ToString(), "Created",fileName, e.FullPath);
+            this.Alert("Created: \"" + fileName + "\"", Form_Alert.enmType.Info);
         }
 
         public void fileSystemWatcher_Deleted(object sender, System.IO.FileSystemEventArgs e)
         {
             string fileName = Path.GetFileName(e.FullPath);
-            if (fileName.StartsWith("~$")) return;
-            AddMsg(DateTime.Now.ToString(), "Deleted", e.FullPath);
-            this.Alert("Deleted: \"" + e.FullPath + "\"", Form_Alert.enmType.Warning);
+            if (fileName.StartsWith("~$") || fileName.Equals("thumbs.db", StringComparison.InvariantCultureIgnoreCase)) return;
+            AddMsg(DateTime.Now.ToString(), "Deleted",fileName, e.FullPath);
+            this.Alert("Deleted: \"" + fileName + "\"", Form_Alert.enmType.Warning);
         }
 
         public void fileSystemWatcher_Renamed(object sender, System.IO.RenamedEventArgs e)
         {
-            AddMsg(DateTime.Now.ToString(), "Renamed", e.FullPath, e.OldFullPath);
-            this.Alert("Renamed: \"" + e.OldName + "\" To \"" + e.Name + "\"", Form_Alert.enmType.Info);
+            string oldFileName = Path.GetFileName(e.OldFullPath);
+            string fileName = Path.GetFileName(e.FullPath);
+            AddMsg(DateTime.Now.ToString(), "Renamed", fileName, e.FullPath, oldFileName, e.OldFullPath);
+            this.Alert("Renamed: \"" + oldFileName + "\" To \"" + fileName + "\"", Form_Alert.enmType.Info);
         }
 
         private void startBtn_Click(object sender, EventArgs e)
@@ -302,6 +306,15 @@ namespace FolderWatcher
         private void Form1_FormClosed(object sender, FormClosedEventArgs e)
         {
             logStream.Close();
+        }
+
+        private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            if (e.CloseReason == CloseReason.UserClosing)
+            {
+                e.Cancel = true;
+                this.WindowState = FormWindowState.Minimized;
+            }
         }
     }
 }

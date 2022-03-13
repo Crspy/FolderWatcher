@@ -13,12 +13,12 @@ namespace FolderWatcher
 {
     public partial class Form_Alert : Form
     {
-        
+
 
         public Form_Alert()
         {
             InitializeComponent();
-            CreateHandle();
+            //CreateHandle();
         }
 
         public enum enmAction
@@ -142,14 +142,14 @@ namespace FolderWatcher
             }
 
 
-  
-          
-                this.lblMsg.Text = msg;
-                this.Show();
-                this.action = enmAction.start;
-                this.timer1.Interval = 1;
-                this.timer1.Start();
-          
+
+
+            this.lblMsg.Text = msg;
+            this.Show();
+            this.action = enmAction.start;
+            this.timer1.Interval = 1;
+            this.timer1.Start();
+
 
         }
     }
